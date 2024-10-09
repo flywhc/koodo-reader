@@ -9,7 +9,11 @@ export const sideMenu = [
     icon: "heart",
     mode: "favorite",
   },
-
+  {
+    name: "KnowledgeBase",
+    icon: "search-book",
+    mode: "knowledge",
+  },
   {
     name: "Notes",
     icon: "idea-line",

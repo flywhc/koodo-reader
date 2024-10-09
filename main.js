@@ -13,6 +13,7 @@ const isDev = require("electron-is-dev");
 const Store = require("electron-store");
 const store = new Store();
 const fs = require("fs");
+const { exec } = require('child_process');
 const configDir = app.getPath("userData");
 const dirPath = path.join(configDir, "uploads");
 let mainWin;
@@ -620,6 +621,20 @@ const createMainWin = () => {
   });
 };
 app.on("ready", () => {
+  // 检查并设置 CHATCHAT_ROOT 环境变量
+  if (!process.env.CHATCHAT_ROOT) {
+    process.env.CHATCHAT_ROOT = "./chatchat_data";
+  }
+  
+  // 运行命令行 "cli start -a"
+  exec('cli start -a', (error, stdout, stderr) => {
+    if (error) {
+      console.error(`执行命令时出错: ${error}`);
+      return;
+    }
+    console.log(`命令输出: ${stdout}`);
+  });
+
   createMainWin();
 });
 app.on("window-all-closed", () => {

@@ -4,6 +4,7 @@ import NoteList from "../containers/lists/noteList";
 import DigestList from "../containers/lists/digestList";
 import EmptyPage from "../containers/emptyPage";
 import LoadingPage from "../containers/loadingPage";
+import KnowledgeBase from "../containers/knowledgeBase";
 
 export const routes = [
   { path: "/manager/empty", component: EmptyPage },
@@ -14,4 +15,5 @@ export const routes = [
   { path: "/manager/shelf", component: BookList },
   { path: "/manager/favorite", component: BookList },
   { path: "/manager/trash", component: DeletedBookList },
+  { path: "/manager/knowledgeBase", component: KnowledgeBase },
 ];

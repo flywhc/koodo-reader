@@ -23,6 +23,7 @@ import { Toaster } from "react-hot-toast";
 import DetailDialog from "../../components/dialogs/detailDialog";
 import FeedbackDialog from "../../components/dialogs/feedbackDialog";
 import { Tooltip } from "react-tooltip";
+import KnowledgeBase from "../../containers/knowledgeBase";
 class Manager extends React.Component<ManagerProps, ManagerState> {
   timer!: NodeJS.Timeout;
   constructor(props: ManagerProps) {
@@ -35,6 +36,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
       isCopied: false,
       isUpdated: false,
       isDrag: false,
+      isKnowledgeBaseLoaded: false,
       token: "",
     };
   }
@@ -72,7 +74,26 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
   }
   componentDidMount() {
     this.props.handleReadingState(false);
+    this.fetchKnowledgeBaseList(); // 调用新方法
   }
+
+  fetchKnowledgeBaseList = async () => {
+    try {
+      console.log("开始获取知识库列表");
+      const response = await fetch("http://127.0.0.1:7861/knowledge_base/list_knowledge_bases");
+      const data = await response.json();
+      console.log("获取知识库列表结果:", data);
+      if (data.code === 200) {
+        this.setState({ isKnowledgeBaseLoaded: true });
+        console.log("知识库列表获取成功");
+      } else {
+        setTimeout(this.fetchKnowledgeBaseList, 5000); // 5秒后重试
+      }
+    } catch (error) {
+      console.error("获取知识库列表失败:", error);
+      setTimeout(this.fetchKnowledgeBaseList, 5000); // 5秒后重试
+    }
+  };
 
   handleDrag = (isDrag: boolean) => {
     this.setState({ isDrag });
@@ -188,6 +209,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
                 path={ele.path}
               />
             ))}
+            <Route path="/manager/knowledge" component={KnowledgeBase} /> {/* 新增这一行 */}
           </Switch>
         )}
       </div>

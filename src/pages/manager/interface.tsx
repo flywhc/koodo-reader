@@ -52,5 +52,6 @@ export interface ManagerState {
   isCopied: boolean;
   isUpdated: boolean;
   isDrag: boolean;
+  isKnowledgeBaseLoaded: boolean;
   token: string;
 }

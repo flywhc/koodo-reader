@@ -1,0 +1,41 @@
+.knowledge-base-container {
+    padding: 20px;
+    position: absolute;
+    top: 80px;
+    left: 220px;
+    width: calc(100vw - 260px);
+    height: calc(100vh - 80px);
+    overflow-y: auto;
+}
+
+.chat-container {
+  height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.message {
+  margin-bottom: 10px;
+  padding: 5px;
+  border-radius: 5px;
+}
+
+.user {
+  background-color: #e6f3ff;
+  text-align: right;
+}
+
+.assistant {
+  background-color: #f0f0f0;
+}
+
+form {
+  display: flex;
+}
+
+input {
+  flex-grow: 1;
+  margin-right: 10px;
+}
