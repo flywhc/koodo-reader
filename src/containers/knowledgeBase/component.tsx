@@ -17,6 +17,17 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
     };
   }
 
+  componentDidMount() {
+    const savedMessages = localStorage.getItem('knowledgeBaseMessages');
+    if (savedMessages) {
+      this.setState({ messages: JSON.parse(savedMessages) });
+    }
+  }
+
+  componentWillUnmount() {
+    localStorage.setItem('knowledgeBaseMessages', JSON.stringify(this.state.messages));
+  }
+
   // 输入框内容改变时，更新状态
   handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     this.setState({ input: e.target.value });
@@ -117,13 +128,17 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
       }
       // 如果API调用成功，将回答内容和引用来源添加到messages中
       if (!this.state.error) {
-        this.setState((prevState) => ({
-          messages: [
+        this.setState((prevState) => {
+          const newMessages = [
             ...prevState.messages,
             { role: "assistant", content: fullAnswer, sources: finalSources },
-          ],
-          currentAnswer: "",
-        }));
+          ];
+          localStorage.setItem('knowledgeBaseMessages', JSON.stringify(newMessages));
+          return {
+            messages: newMessages,
+            currentAnswer: "",
+          };
+        });
       }
     } catch (error) {
       // 如果API调用失败，将错误信息存储在state中
@@ -176,6 +191,12 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
     });
   };
 
+  // 添加清除历史消息的方法
+  handleClearHistory = () => {
+    this.setState({ messages: [], currentAnswer: "", sources: [], error: null });
+    localStorage.removeItem('knowledgeBaseMessages');
+  };
+
   // 渲染知识库页面
   render() {
     const { t } = this.props;
@@ -184,7 +205,7 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
         className="knowledge-base-container"
         style={this.props.isCollapsed ? { width: "calc(100vw - 70px)", left: "70px" } : {}}
       >
-        <h2>{t("Knowledge Base")}</h2>
+        <h2>{t("KnowledgeBase")}</h2>
         <div className="chat-container">
           {this.state.messages.map((message, index) => ( // 渲染历史对话内容
             <div key={index} className={`message ${message.role}`}>
@@ -207,11 +228,13 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
         <form onSubmit={this.handleSubmit}>
           <input
             type="text"
+            className="input-box"
             value={this.state.input}
             onChange={this.handleInputChange}
             placeholder={t("Ask a question")}
           />
-          <button type="submit">{t("Send")}</button>
+          <button type="submit" className="button">{t("Send")}</button>
+          <button type="button" className="button" onClick={this.handleClearHistory}>{t("Clear History")}</button>
         </form>
       </div>
     );

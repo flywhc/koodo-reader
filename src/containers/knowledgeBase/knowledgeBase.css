@@ -25,6 +25,34 @@
   padding: 0;
 }
 
+.button {
+  margin: 5px;
+  min-width: 80px;
+  border-radius: 25px;
+  line-height: 42px;
+  text-align: center;
+  cursor: pointer;
+  z-index: 0;
+  font-size: 15px;
+  transition: 0.1s;
+  font-weight: 500;
+  background-color: #4b4b4b;
+  color: #ffffff;
+}
+
+.chat-container {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+
+.input-box {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 10px;
+  margin-right: 10px;
+  height: 32px;
+}
+
 .custom-popup-class {
   max-width: 80vw; /* 限制最大宽度为视口宽度的 80% */
 }
