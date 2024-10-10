@@ -15,11 +15,35 @@
   margin-bottom: 20px;
   padding: 10px;
 }
+.link-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  display: inline;
+  margin: 0;
+  padding: 0;
+}
+
+.custom-popup-class {
+  max-width: 80vw; /* 限制最大宽度为视口宽度的 80% */
+}
+
+.custom-popup-class .swal2-html-container {
+  margin: 1em 0; /* 调整内容的上下边距 */
+}
 
 .message {
   margin-bottom: 10px;
   padding: 5px;
   border-radius: 5px;
+}
+.message.error {
+  background-color: #ffebee;
+  color: #fba5a5;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 10px;
 }
 
 .user {
