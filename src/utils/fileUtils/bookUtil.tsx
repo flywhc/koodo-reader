@@ -10,6 +10,7 @@ import { Buffer } from "buffer";
 declare var window: any;
 
 class BookUtil {
+  // 添加书籍到存储，key为书籍的唯一标识，buffer为书籍的二进制内容
   static addBook(key: string, buffer: ArrayBuffer) {
     if (isElectron) {
       const fs = window.require("fs");
@@ -46,7 +47,40 @@ class BookUtil {
       return window.localforage.setItem(key, buffer);
     }
   }
-  static deleteBook(key: string) {
+  // 删除书籍，key为书籍的唯一标识
+  static async deleteBook(key: string) {
+    try {
+      // 查询书籍信息
+      const book = await this.getBookFromKey(key);
+      if (book) {
+        // 构造向量化的文件名
+        const vectorizedName = `${key}.${book.format.toLowerCase()}`;
+        
+        // 调用 API 删除向量数据库中的文档
+        const response = await fetch('http://127.0.0.1:7861/knowledge_base/delete_docs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            knowledge_base_name: "Jason Test",
+            file_names: [vectorizedName],
+            delete_content: true,
+            not_refresh_vs_cache: false
+          }),
+        });
+  
+        if (!response.ok) {
+          console.error('删除向量数据库文档失败:', response.statusText);
+          // 忽略错误，继续执行删除本地文件的逻辑
+        }
+      }
+    } catch (error) {
+      console.error('网络连接错误:', error);
+      toast.error('无法连接到向量服务，请重启应用再试。');
+      return; // 退出函数
+    }
+    // 删除本地文件
     if (isElectron) {
       const fs_extra = window.require("fs-extra");
       const path = window.require("path");
@@ -69,6 +103,8 @@ class BookUtil {
       return window.localforage.removeItem(key);
     }
   }
+
+  // 检查书籍是否存在，key为书籍的唯一标识，bookPath为书籍的路径
   static isBookExist(key: string, bookPath: string = "") {
     return new Promise<boolean>((resolve, reject) => {
       if (isElectron) {
@@ -105,6 +141,8 @@ class BookUtil {
       }
     });
   }
+
+  // 获取书籍，key为书籍的唯一标识，isArrayBuffer为是否返回ArrayBuffer，bookPath为书籍的路径
   static fetchBook(
     key: string,
     isArrayBuffer: boolean = false,
@@ -147,11 +185,15 @@ class BookUtil {
       return window.localforage.getItem(key);
     }
   }
+
+  // 获取所有书籍，Books为书籍列表
   static FetchAllBooks(Books: BookModel[]) {
     return Books.map((item) => {
       return this.fetchBook(item.key, true, item.path);
     });
   }
+
+  // 跳转到阅读书籍页面，book为书籍对象，t为翻译函数，history为历史对象
   static async RedirectBook(
     book: BookModel,
     t: (string) => string,
@@ -192,10 +234,14 @@ class BookUtil {
       );
     }
   }
+
+  // 获取书籍URL，book为书籍对象
   static getBookUrl(book: BookModel) {
     let ref = book.format.toLowerCase();
     return `/${ref}/${book.key}`;
   }
+
+  // 获取PDF书籍URL，book为书籍对象
   static getPDFUrl(book: BookModel) {
     if (isElectron) {
       const path = window.require("path");
@@ -225,6 +271,8 @@ class BookUtil {
       return `./lib/pdf/web/viewer.html?file=${book.key}`;
     }
   }
+
+  // 重新加载书籍，如果是在Electron环境下，则重新加载阅读器，否则重新加载页面
   static reloadBooks() {
     if (isElectron) {
       if (StorageUtil.getReaderConfig("isOpenInMain") === "yes") {
@@ -236,6 +284,8 @@ class BookUtil {
       window.location.reload();
     }
   }
+
+  // 获取渲染器，result为书籍的二进制内容，format为书籍的格式，readerMode为阅读模式，charset为字符编码
   static getRendtion = (
     result: ArrayBuffer,
     format: string,
@@ -280,6 +330,10 @@ class BookUtil {
     }
     return rendition;
   };
+
+  // 生成书籍的信息
+  // bookName为书籍名称，extension为书籍格式，md5为书籍MD5值，size为书籍大小，
+  // path为书籍路径，file_content为书籍的二进制内容
   static generateBook(
     bookName: string,
     extension: string,
@@ -385,6 +439,7 @@ class BookUtil {
             break;
         }
         let format = extension.toUpperCase();
+        // 生成书籍的唯一标识，使用当前时间戳
         key = new Date().getTime() + "";
         if (
           StorageUtil.getReaderConfig("isPrecacheBook") === "yes" &&
@@ -416,6 +471,16 @@ class BookUtil {
         resolve("get_metadata_error");
       }
     });
+  }
+
+  // 从数据的key获取书籍信息
+  static async getBookFromKey(key: string): Promise<BookModel | null> {
+    const books = await window.localforage.getItem("books") as BookModel[] | null;
+    if (books) {
+      const book = books.find(item => item.key === key);
+      return book || null;
+    }
+    return null;
   }
 }
 

@@ -9,13 +9,20 @@ export interface KnowledgeBaseProps extends RouteComponentProps, WithTranslation
     input: string;
     messages: Message[];
     currentAnswer: string;
-    sources: string[];
+    sources: Source[];
     error: string | null;
   }
 
   export interface Message {
     role: string;
     content: string;
-    sources?: string[];
+    sources?: Source[];
   }
   
+  export interface Source {
+    key: string;
+    title: string;
+    content: string;
+  }
+
+

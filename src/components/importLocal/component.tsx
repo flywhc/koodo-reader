@@ -1,7 +1,7 @@
 import React from "react";
 import "./importLocal.css";
 import BookModel from "../../models/Book";
-
+import { getMimeType } from "../../constants/mimetype";
 import { fetchMD5 } from "../../utils/fileUtils/md5Util";
 import { Trans } from "react-i18next";
 import Dropzone from "react-dropzone";
@@ -19,7 +19,12 @@ import ShelfUtil from "../../utils/readUtils/shelfUtil";
 declare var window: any;
 let clickFilePath = "";
 
+// 导入本地文件
 class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
+  private focusListener: any;
+  private resizeListener: any;
+  
+  // 构造函数
   constructor(props: ImportLocalProps) {
     super(props);
     this.state = {
@@ -27,6 +32,8 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       width: document.body.clientWidth,
     };
   }
+
+  // 挂载组件
   componentDidMount() {
     if (isElectron) {
       const { ipcRenderer } = window.require("electron");
@@ -41,23 +48,40 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       if (filePath && filePath !== ".") {
         this.handleFilePath(filePath);
       }
-      window.addEventListener(
+      this.focusListener = window.addEventListener(
         "focus",
-        (event) => {
-          const _filePath = ipcRenderer.sendSync("get-file-data");
-          if (_filePath && _filePath !== ".") {
-            this.handleFilePath(_filePath);
-          }
-        },
+        this.handleFocus,
         false
       );
     }
-    window.addEventListener("resize", () => {
-      this.setState({ width: document.body.clientWidth });
-    });
+    this.resizeListener = window.addEventListener("resize", this.handleResize);
   }
+
+  componentWillUnmount() {
+    if (this.focusListener) {
+      window.removeEventListener("focus", this.handleFocus);
+    }
+    if (this.resizeListener) {  
+      window.removeEventListener("resize", this.handleResize);
+    }
+  }
+
+  handleFocus = (event) => {
+    const { ipcRenderer } = window.require("electron");
+    const _filePath = ipcRenderer.sendSync("get-file-data");
+    if (_filePath && _filePath !== ".") {
+      this.handleFilePath(_filePath);
+    }
+  };
+
+  handleResize = () => {
+    this.setState({ width: document.body.clientWidth });
+  };
+
+  // 处理文件路径
   handleFilePath = async (filePath: string) => {
     clickFilePath = filePath;
+    // 如果发现重复的文件，则跳转
     let md5 = await fetchMD5(await fetchFileFromPath(filePath));
     if ([...(this.props.books || []), ...this.props.deletedBooks].length > 0) {
       let isRepeat = false;
@@ -75,17 +99,61 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
         return;
       }
     }
+    // 获取文件
     const fileTemp = await fetchFileFromPath(filePath);
 
     this.setState({ isOpenFile: true }, async () => {
       await this.getMd5WithBrowser(fileTemp);
     });
   };
+
+  // 跳转到指定的书籍
   handleJump = (book: BookModel) => {
     localStorage.setItem("tempBook", JSON.stringify(book));
     BookUtil.RedirectBook(book, this.props.t, this.props.history);
     this.props.history.push("/manager/home");
   };
+
+  // 向量化文件
+  async vectorizeFile(file_content: ArrayBuffer, file_type: string, filename: string): Promise<boolean> {
+    const mimeType = getMimeType(file_type) || 'application/octet-stream';
+    const formData = new FormData();
+    formData.append("files", new Blob([file_content], { type: mimeType }), filename);
+    formData.append("knowledge_base_name", "Jason Test");
+    formData.append("override", "false");
+    formData.append("to_vector_store", "true");
+    formData.append("chunk_size", "750"); 
+    formData.append("chunk_overlap", "150");
+    formData.append("zh_title_enhance", "false");
+    formData.append("docs", "{}");
+    formData.append("not_refresh_vs_cache", "false");
+
+    console.info("向量化文件:" + filename);
+
+    return toast.promise(
+      fetch("http://127.0.0.1:7861/knowledge_base/upload_docs", {
+        method: "POST", 
+        body: formData
+      }).then(async (response) => {
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error("向量化错误：" + error.msg);
+        }
+        console.info("向量化文件成功:" + filename);
+      }),
+      {
+        loading: "正在向量化文件...",
+        success: "向量化完成",
+        error: (err) => `向量化文件失败,文件不能添加。<br/> ${err.message}`,
+      }
+    ).then(() => true)
+    .catch((err) => {
+      console.error(err);
+      return false; 
+    });
+  }
+
+  // 添加书籍
   handleAddBook = (book: BookModel, buffer: ArrayBuffer) => {
     return new Promise<void>((resolve, reject) => {
       if (this.state.isOpenFile) {
@@ -104,6 +172,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
           BookUtil.addBook(book.key, buffer);
       }
 
+      // 更新书籍列表
       let bookArr = [...(this.props.books || []), ...this.props.deletedBooks];
       if (bookArr == null) {
         bookArr = [];
@@ -111,6 +180,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
       bookArr.push(book);
       this.props.handleReadingBook(book);
       RecordRecent.setRecent(book.key);
+      // 保存书籍列表到localforage
       window.localforage
         .setItem("books", bookArr)
         .then(() => {
@@ -217,10 +287,15 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
               toast.error(this.props.t("Import failed"));
               return resolve();
             }
-            await this.handleAddBook(
-              result as BookModel,
-              file_content as ArrayBuffer
-            );
+            // 使用书籍的key和扩展名作为向量化文件的名称。key是1970年1月1日以来的毫秒数
+            const vectorizedName = (result as BookModel).key + "." + extension;
+            const isVectorized = await this.vectorizeFile(file_content, extension, vectorizedName);
+            if (isVectorized) {
+              await this.handleAddBook(
+                result as BookModel,
+                file_content as ArrayBuffer
+              );
+            }
 
             return resolve();
           };

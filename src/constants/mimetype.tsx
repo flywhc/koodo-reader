@@ -14,4 +14,18 @@ export const mimetype = {
   xml: "text/xml",
   xhtml: "text/html",
   mhtml: "application/x-mimearchive",
+  epub: "application/epub+zip",
+  pdf: "application/pdf",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  doc: "application/msword",
+  txt: "text/plain",
+  md: "text/markdown",
+  json: "application/json",
+  csv: "text/csv",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  xls: "application/vnd.ms-excel",
 };
+
+export function getMimeType(extension: string): string | undefined {
+  return mimetype[extension as keyof typeof mimetype];
+}
