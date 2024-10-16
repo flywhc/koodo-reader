@@ -11,9 +11,11 @@ import "./knowledgeBase.css";
 import { KnowledgeBaseProps, KnowledgeBaseState, Source } from "./interface";
 import StringifyWithFloats from "stringify-with-floats";
 import BookUtil from "../../utils/fileUtils/bookUtil";
+import { preprocessLaTeX } from "./markdownUtil";
 
 // 知识库检索页面
 class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseState> {
+  private chatContainerRef = React.createRef<HTMLDivElement>();
   constructor(props: KnowledgeBaseProps) {
     super(props);
     this.state = {
@@ -38,11 +40,23 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
     linkElement.integrity = 'sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn';
     linkElement.crossOrigin = 'anonymous';
     document.head.appendChild(linkElement);
+    this.scrollToBottom();
   }
 
   componentWillUnmount() {
     localStorage.setItem('knowledgeBaseMessages', JSON.stringify(this.state.messages));
   }
+  componentDidUpdate(prevProps: KnowledgeBaseProps, prevState: KnowledgeBaseState) {
+    if (prevState.currentAnswer.length !== this.state.currentAnswer.length) {
+      this.scrollToBottom();
+    }
+  }
+
+  scrollToBottom = () => {
+    if (this.chatContainerRef.current) {
+      this.chatContainerRef.current.scrollTop = this.chatContainerRef.current.scrollHeight;
+    }
+  };
 
   // 输入框内容改变时，更新状态
   handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,7 +115,6 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
       const decoder = new TextDecoder();
       console.log("开始读取SSE流");
       let fullAnswer = ""; // 存储回答的内容
-      let finalSources: Source[] = []; // 存储向量数据库搜到的引用来源
       // 读取SSE流的响应内容。SSE协议本身不支持POST，这里用fetch模拟SSE，目前不支持SSE的断线重连
       let buffer = ""; // 引入缓冲区
       while (true) {
@@ -153,9 +166,8 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
                   return "";
                 };
 
-                finalSources = [];
-                // eslint-disable-next-line no-loop-func
-                data.docs.map(async (source: string, index: number) => {
+                const finalSources: Source[] = [];
+                const promises = data.docs.map(async (source: string, index: number) => {
                   // 提取第二个中括号中的内容
                   const matches = source.match(/\[([^\]]+)\]/g);
                   const bookVectorizedName = matches && matches[1] ? matches[1].slice(1, -1) : `${this.props.t("出处")} ${index + 1}`;
@@ -164,15 +176,18 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
                   const content = extractContent(source);
                   const sourceTitle = bookData ? bookData.name : `未找到数据库书籍 ${bookVectorizedName}`;
                   finalSources.push({ key: bookName, title: sourceTitle, content: content });
+                  console.log("finalSources: " + finalSources.length);
                 });
+
+                await Promise.all(promises);
                 this.setState({ sources: finalSources });
+                console.log("States Sources: " + this.state.sources.length);
               }
             } catch (error) {
+              console.error("解析 JSON 时出错:", error);
               // 如果解析JSON时出错，将错误信息存储在state中
               if (error instanceof Error) {
                 this.setState({ error: error.message });
-              } else {
-                console.error("解析 JSON 时出错:", error);
               }
             }
           }
@@ -186,13 +201,15 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
         this.setState((prevState) => {
           const newMessages = [
             ...prevState.messages,
-            { role: "assistant", content: fullAnswer, sources: finalSources },
+            { role: "assistant", content: fullAnswer, sources: this.state.sources },
           ];
           localStorage.setItem('knowledgeBaseMessages', JSON.stringify(newMessages));
           console.log("更新本地存储");
           return {
             messages: newMessages,
             currentAnswer: "",
+            sources: [],
+            error: null,
           };
         });
       }
@@ -210,11 +227,10 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
   renderSourcesForMessage = (sources: Source[] | undefined) => {
     const { t } = this.props;
     if (!sources || sources.length === 0) return null;
-    console.log("渲染引用来源");
     return (
       <div className="sources">
         {sources.map((source: Source, index: number) => {
-          console.log("渲染引用来源的每一项: " + index);
+//          console.log("渲染引用来源的每一项: " + index);
           return (
             <div key={index}>
               <a href="#"
@@ -276,8 +292,7 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
               <ReactMarkdown
                 remarkPlugins={[remarkMath, remarkGfm]}
                 rehypePlugins={[rehypeKatex, rehypeRaw]}
-              >{message.content}</ReactMarkdown>
-
+              >{preprocessLaTeX(message.content)}</ReactMarkdown>
             </div>
           ))}
           {this.state.currentAnswer && ( // 渲染当前回答内容
@@ -286,7 +301,7 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
               <ReactMarkdown
                 remarkPlugins={[remarkMath, remarkGfm]}
                 rehypePlugins={[rehypeKatex, rehypeRaw]}
-              >{this.state.currentAnswer}</ReactMarkdown>
+              >{preprocessLaTeX(this.state.currentAnswer)}</ReactMarkdown>
             </div>
           )}
           {this.state.error && ( // 渲染错误信息

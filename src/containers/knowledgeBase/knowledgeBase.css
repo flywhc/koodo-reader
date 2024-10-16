@@ -1,20 +1,22 @@
 .knowledge-base-container {
-    padding: 20px;
     position: absolute;
     top: 80px;
     left: 220px;
-    width: calc(100vw - 260px);
-    height: calc(100vh - 80px);
-    overflow-y: auto;
+    width: calc(100% - 250px);
+    height: calc(100% - 125px);
+    overflow: visible;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
 }
 
 .chat-container {
-  height: 400px;
+  flex: 1;
   overflow-y: auto;
-  border: 1px solid #ccc;
   margin-bottom: 20px;
-  padding: 10px;
+  padding-bottom: 60px; /* 为底部的表单留出空间 */
 }
+
 .link-button {
   background-color: transparent;
   border: none;
@@ -51,6 +53,7 @@
   padding: 10px;
   margin-right: 10px;
   height: 32px;
+  flex: 1; /* 自动填充 form 的剩余空间 */
 }
 
 .custom-popup-class {
@@ -65,6 +68,7 @@
   margin-bottom: 10px;
   padding: 5px;
   border-radius: 5px;
+  user-select: text !important;
 }
 .message.error {
   background-color: #ffebee;
@@ -75,16 +79,20 @@
 }
 
 .user {
-  background-color: #e6f3ff;
+  background-color: #f0f0f0;
   text-align: right;
 }
 
 .assistant {
-  background-color: #f0f0f0;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
 }
 
 form {
+  margin-top: auto; /* 将表单推到底部 */
   display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 input {
