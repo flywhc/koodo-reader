@@ -16,6 +16,7 @@ import toast from "react-hot-toast";
 import StorageUtil from "../../utils/serviceUtils/storageUtil";
 
 import ShelfUtil from "../../utils/readUtils/shelfUtil";
+import { API_BASE_URL } from "../../config";
 declare var window: any;
 let clickFilePath = "";
 
@@ -131,7 +132,7 @@ class ImportLocal extends React.Component<ImportLocalProps, ImportLocalState> {
     console.info("向量化文件:" + filename);
 
     return toast.promise(
-      fetch("http://127.0.0.1:7861/knowledge_base/upload_docs", {
+      fetch(`${API_BASE_URL}/knowledge_base/upload_docs`, {
         method: "POST", 
         body: formData
       }).then(async (response) => {

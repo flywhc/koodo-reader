@@ -7,6 +7,7 @@ import { getPDFMetadata } from "./pdfUtil";
 import { copyArrayBuffer } from "../commonUtil";
 import iconv from "iconv-lite";
 import { Buffer } from "buffer";
+import { API_BASE_URL } from "../../config";
 declare var window: any;
 
 class BookUtil {
@@ -57,7 +58,7 @@ class BookUtil {
         const vectorizedName = `${key}.${book.format.toLowerCase()}`;
         
         // 调用 API 删除向量数据库中的文档
-        const response = await fetch('http://127.0.0.1:7861/knowledge_base/delete_docs', {
+        const response = await fetch(`${API_BASE_URL}/knowledge_base/delete_docs`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

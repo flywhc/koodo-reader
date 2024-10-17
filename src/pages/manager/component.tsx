@@ -24,6 +24,7 @@ import DetailDialog from "../../components/dialogs/detailDialog";
 import FeedbackDialog from "../../components/dialogs/feedbackDialog";
 import { Tooltip } from "react-tooltip";
 import KnowledgeBase from "../../containers/knowledgeBase";
+import { API_BASE_URL } from "../../config";
 class Manager extends React.Component<ManagerProps, ManagerState> {
   timer!: NodeJS.Timeout;
   constructor(props: ManagerProps) {
@@ -80,7 +81,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
   fetchKnowledgeBaseList = async () => {
     try {
       console.log("开始获取知识库列表");
-      const response = await fetch("http://127.0.0.1:7861/knowledge_base/list_knowledge_bases", {
+      const response = await fetch(`${API_BASE_URL}/knowledge_base/list_knowledge_bases`, {
         mode: 'cors',
         headers: {
           'Content-Type': 'application/json; charset=utf-8',

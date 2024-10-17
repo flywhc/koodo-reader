@@ -7,11 +7,13 @@ import remarkMath from 'remark-math'; // 数学公式
 import rehypeKatex from 'rehype-katex'; // 科学表达式解析
 import remarkGfm from 'remark-gfm'; // github风格markdown
 import rehypeRaw from "rehype-raw"; // markdown内含 HTML语法解析
-import "./knowledgeBase.css";
-import { KnowledgeBaseProps, KnowledgeBaseState, Source } from "./interface";
 import StringifyWithFloats from "stringify-with-floats";
+import { KnowledgeBaseProps, KnowledgeBaseState, Source } from "./interface";
 import BookUtil from "../../utils/fileUtils/bookUtil";
 import { preprocessLaTeX } from "./markdownUtil";
+import "./knowledgeBase.css";
+import "katex/dist/katex.min.css";
+import { API_BASE_URL, MODEL_CONFIG } from "../../config";
 
 // 知识库检索页面
 class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseState> {
@@ -33,14 +35,9 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
       this.setState({ messages: JSON.parse(savedMessages) });
     }
 
-    // 动态加载 KaTeX CSS 文件
-    const linkElement = document.createElement('link');
-    linkElement.rel = 'stylesheet';
-    linkElement.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css';
-    linkElement.integrity = 'sha384-GvrOXuhMATgEsSwCs4smul74iXGOixntILdUW9XmUC6+HX0sLNAK3q71HotJqlAn';
-    linkElement.crossOrigin = 'anonymous';
-    document.head.appendChild(linkElement);
-    this.scrollToBottom();
+    setTimeout(() => {
+      this.scrollToBottom();
+    }, 0);
   }
 
   componentWillUnmount() {
@@ -83,7 +80,7 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
     try {
       // 发送langchain chatchat kb_chat的请求
       const response = await fetch(
-        "http://127.0.0.1:7861/knowledge_base/local_kb/Jason%20Test/chat/completions",
+        `${API_BASE_URL}/knowledge_base/local_kb/Jason%20Test/chat/completions`,
         {
           method: "POST",
           // 使用SSE流式传输头
@@ -93,11 +90,8 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
           },
           body: stringify({
             messages: [{ role: "user", content: this.state.input }],
-            model: "qwen2:7b",
+            ...MODEL_CONFIG,
             stream: true,
-            top_k: 3,
-            score_threshold: 2.0,
-            temperature: 0.7,
             prompt_name: "default",
             return_direct: false,
           }),
@@ -113,7 +107,6 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
       // 获取SSE流的读取器
       const reader = response.body!.getReader();
       const decoder = new TextDecoder();
-      console.log("开始读取SSE流");
       let fullAnswer = ""; // 存储回答的内容
       // 读取SSE流的响应内容。SSE协议本身不支持POST，这里用fetch模拟SSE，目前不支持SSE的断线重连
       let buffer = ""; // 引入缓冲区
@@ -128,7 +121,6 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
           if (lineEnd === -1) break; // 如果没有找到换行符,说明当前缓冲区中的数据不完整,等待下一次读取
           const line = buffer.slice(lineStart, lineEnd); // 取出完整的一行数据
           lineStart = lineEnd + 1;
-          console.log("读取到SSE流的一行完整数据");
           // SSE流每行以data:开头，所以需要去掉data:
           if (line.startsWith("data:")) {
             try {
@@ -137,7 +129,6 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
                 throw new Error(data.error);
               }
               // 向现有答案添加新内容
-              console.log("向现有答案添加新内容");
               if (data.choices && data.choices[0].delta.content) {
                 fullAnswer += data.choices[0].delta.content;
                 this.setState({ currentAnswer: fullAnswer });
@@ -150,7 +141,6 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
               //  "出处 [2] [1728755142168.epub](http://127.0.0...文件下载地址) \n\n所以今天我要来想想看有没有办……的电子元件就会停止运作。\n\n",
               //],
               if (data.docs && this.state.sources.length === 0) {
-                console.log("更新引用来源");
                 const extractContent = (source: string) => {
                   const index = source.indexOf(')');
                   if (index !== -1) {
@@ -176,19 +166,21 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
                   const content = extractContent(source);
                   const sourceTitle = bookData ? bookData.name : `未找到数据库书籍 ${bookVectorizedName}`;
                   finalSources.push({ key: bookName, title: sourceTitle, content: content });
-                  console.log("finalSources: " + finalSources.length);
                 });
 
                 await Promise.all(promises);
                 this.setState({ sources: finalSources });
-                console.log("States Sources: " + this.state.sources.length);
               }
             } catch (error) {
               console.error("解析 JSON 时出错:", error);
-              // 如果解析JSON时出错，将错误信息存储在state中
-              if (error instanceof Error) {
-                this.setState({ error: error.message });
+              let errorMessage = "未知错误";
+              if (typeof error === 'string') {
+                errorMessage = error;
+              } else if (error instanceof Error) {
+                errorMessage = error.message;
               }
+              // 将错误信息存储在state中显示
+              this.setState({ error: errorMessage });
             }
           }
         }
@@ -204,7 +196,6 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
             { role: "assistant", content: fullAnswer, sources: this.state.sources },
           ];
           localStorage.setItem('knowledgeBaseMessages', JSON.stringify(newMessages));
-          console.log("更新本地存储");
           return {
             messages: newMessages,
             currentAnswer: "",
@@ -285,7 +276,7 @@ class KnowledgeBase extends React.Component<KnowledgeBaseProps, KnowledgeBaseSta
         style={this.props.isCollapsed ? { width: "calc(100vw - 70px)", left: "70px" } : {}}
       >
         <h2>{t("KnowledgeBase")}</h2>
-        <div className="chat-container">
+        <div className="chat-container" ref={this.chatContainerRef}>
           {this.state.messages.map((message, index) => ( // 渲染历史对话内容
             <div key={index} className={`message ${message.role}`}>
               {message.role === "assistant" && this.renderSourcesForMessage(message.sources)}
