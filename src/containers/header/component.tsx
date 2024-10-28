@@ -302,6 +302,27 @@ class Header extends React.Component<HeaderProps, HeaderState> {
               </span>
             </div>
           )}
+          <div
+            className="setting-icon-container"
+            onClick={() => {
+              this.props.handleAIStateDialog(true);
+            }}
+            style={{ marginTop: "1px" }}
+          >
+            <span
+              data-tooltip-id="my-tooltip"  
+              data-tooltip-content={this.props.t("AI State")}
+            >
+              <span
+                className="icon-eye setting-icon"
+                style={
+                  this.state.isdataChange
+                    ? { color: "rgb(35, 170, 242)" }
+                    : {}
+                }
+              ></span>
+            </span>
+          </div>
         </div>
         {this.state.isDeveloperVer && (
           <div

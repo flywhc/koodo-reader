@@ -621,13 +621,15 @@ const createMainWin = () => {
   });
 };
 app.on("ready", () => {
+
   // 检查并设置 CHATCHAT_ROOT 环境变量
-  if (!process.env.CHATCHAT_ROOT) {
-    process.env.CHATCHAT_ROOT = "./chatchat_data";
-  }
+  //if (!process.env.CHATCHAT_ROOT) {
+  process.env.CHATCHAT_ROOT =  path.join(dirPath, "chatchat_data");
+  console.log("CHATCHAT_ROOT: ", process.env.CHATCHAT_ROOT);
+  //}
   
   // 运行命令行 "cli start -a"
-  exec('cli start -a', (error, stdout, stderr) => {
+  exec('C:/AIGC/Langchain-Chatchat/libs/chatchat-server/chatchat/dist/cli start -a', (error, stdout, stderr) => {
     if (error) {
       console.error(`执行命令时出错: ${error}`);
       return;

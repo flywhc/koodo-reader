@@ -15,6 +15,7 @@ export interface HeaderProps {
   handleSetting: (isSettingOpen: boolean) => void;
   handleAbout: (isAboutOpen: boolean) => void;
   handleBackupDialog: (isBackup: boolean) => void;
+  handleAIStateDialog: (isAIState: boolean) => void;
   handleFeedbackDialog: (isShow: boolean) => void;
 
   handleDrag: (isDrag: boolean) => void;

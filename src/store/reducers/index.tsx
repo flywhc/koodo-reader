@@ -1,6 +1,7 @@
 export * from "./manager";
 export * from "./book";
 export * from "./backupPage";
+export * from "./aiStatePage";
 export * from "./progressPanel";
 export * from "./reader";
 export * from "./sidebar";

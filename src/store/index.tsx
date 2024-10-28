@@ -7,10 +7,12 @@ import { reader } from "./reducers/reader";
 import { viewArea } from "./reducers/viewArea";
 import { sidebar } from "./reducers/sidebar";
 import { backupPage } from "./reducers/backupPage";
+import { aiStatePage } from "./reducers/aiStatePage";
 import BookModel from "../models/Book";
 import NoteModel from "../models/Note";
 import BookmarkModel from "../models/Bookmark";
 import HtmlBookModel from "../models/HtmlBook";
+
 const rootReducer = combineReducers({
   book,
   manager,
@@ -19,6 +21,7 @@ const rootReducer = combineReducers({
   viewArea,
   sidebar,
   backupPage,
+  aiStatePage,
 });
 const store = createStore(
   rootReducer,
@@ -68,6 +71,11 @@ export type stateType = {
   backupPage: {
     isBackup: boolean;
     isOpenTokenDialog: boolean;
+  };
+  aiStatePage: {
+    isOpenAIStatePage: boolean;
+    isAIState: boolean;
+    message: string;
   };
   progressPanel: {
     percentage: number;

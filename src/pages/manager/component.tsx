@@ -7,6 +7,7 @@ import AddDialog from "../../components/dialogs/addDialog";
 import SortDialog from "../../components/dialogs/sortDialog";
 import AboutDialog from "../../components/dialogs/aboutDialog";
 import BackupDialog from "../../components/dialogs/backupDialog";
+import AIStateDialog from "../../components/dialogs/aiStateDialog";
 import "./manager.css";
 import { ManagerProps, ManagerState } from "./interface";
 import { Trans } from "react-i18next";
@@ -25,6 +26,7 @@ import FeedbackDialog from "../../components/dialogs/feedbackDialog";
 import { Tooltip } from "react-tooltip";
 import KnowledgeBase from "../../containers/knowledgeBase";
 import { API_BASE_URL } from "../../config";
+
 class Manager extends React.Component<ManagerProps, ManagerState> {
   timer!: NodeJS.Timeout;
   constructor(props: ManagerProps) {
@@ -159,6 +161,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
               this.props.handleLoadingDialog(false);
               this.props.handleNewDialog(false);
               this.props.handleBackupDialog(false);
+              this.props.handleAIStateDialog(false);
               this.props.handleSetting(false);
               this.props.handleFeedbackDialog(false);
               this.handleDrag(false);
@@ -167,6 +170,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
               this.props.isSettingOpen ||
               this.props.isOpenFeedbackDialog ||
               this.props.isBackup ||
+              this.props.isAIState ||
               this.props.isShowNew ||
               this.props.isOpenDeleteDialog ||
               this.props.isOpenEditDialog ||
@@ -201,6 +205,7 @@ class Manager extends React.Component<ManagerProps, ManagerState> {
         {this.props.isSortDisplay && <SortDialog />}
         {this.props.isAboutOpen && <AboutDialog />}
         {this.props.isBackup && <BackupDialog />}
+        {this.props.isAIState && <AIStateDialog />}
         {this.props.isOpenFeedbackDialog && <FeedbackDialog />}{" "}
         {this.props.isSettingOpen && <SettingDialog />}
         {this.props.isTipDialog && <TipDialog />}

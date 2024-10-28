@@ -7,6 +7,7 @@ import {
   handleTipDialog,
   handleTip,
   handleBackupDialog,
+  handleAIStateDialog,
   handleFeedbackDialog,
   handleFetchBooks,
   handleFetchNotes,
@@ -24,13 +25,14 @@ const mapStateToProps = (state: stateType) => {
     isCollapsed: state.sidebar.isCollapsed,
     isNewWarning: state.manager.isNewWarning,
     notes: state.reader.notes,
-
+    isOpenAIStatePage: state.aiStatePage.isOpenAIStatePage,
     isSortDisplay: state.manager.isSortDisplay,
   };
 };
 const actionCreator = {
   handleSortDisplay,
   handleBackupDialog,
+  handleAIStateDialog,
   handleSetting,
   handleAbout,
   handleFeedbackDialog,

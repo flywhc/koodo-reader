@@ -1,0 +1,58 @@
+.aistate-page-container {
+  width: 454px;
+  height: 278px;
+  position: absolute;
+  left: calc(50% - 225px);
+  top: calc(50% - 150px);
+  overflow: hidden;
+  z-index: 20;
+  opacity: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  border-radius: 5px;
+  z-index: 10;
+  animation: popup 0.1s ease-in-out 0s 1;
+  background-color: #fff;
+}
+
+.aistate-page-title {
+  width: 100%;
+  font-size: 18px;
+  line-height: 60px;
+  opacity: 1;
+  text-align: center;
+  font-weight: 500;
+}
+
+.aistate-page-close-icon {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  cursor: pointer;
+  transition: 0.1s;
+  width: 38px;
+  height: 38px;
+}
+
+.aistate-page-close-icon:hover {
+  border-radius: 50%;
+}
+
+.aistate-page-content {
+  width: 100%;
+  height: calc(100% - 60px);
+  overflow: auto;
+  padding: 10px;
+}
+
+.aistate-page-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9;
+  display: none;
+}

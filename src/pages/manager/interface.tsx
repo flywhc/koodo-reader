@@ -42,6 +42,8 @@ export interface ManagerProps extends RouteComponentProps<any> {
   handleReadingState: (isReading: boolean) => void;
   handleSetting: (isSettingOpen: boolean) => void;
   t: (title: string) => string;
+  isAIState: boolean;
+  handleAIStateDialog: (isAIState: boolean) => void;
 }
 
 export interface ManagerState {

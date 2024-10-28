@@ -11,6 +11,7 @@ import {
   handleFeedbackDialog,
   handleSetting,
   handleBackupDialog,
+  handleAIStateDialog,
   handleFetchNotes,
   handleFetchBookmarks,
   handleEditDialog,
@@ -48,6 +49,7 @@ const mapStateToProps = (state: stateType) => {
     isTipDialog: state.manager.isTipDialog,
     DetailDialog: state.manager.isDetailDialog,
     isBackup: state.backupPage.isBackup,
+    isAIState: state.aiStatePage.isAIState,
   };
 };
 const actionCreator = {
@@ -67,6 +69,7 @@ const actionCreator = {
   handleLoadingDialog,
   handleNewDialog,
   handleBackupDialog,
+  handleAIStateDialog,
   handleReadingState,
 };
 export default connect(
