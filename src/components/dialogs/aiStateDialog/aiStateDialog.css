@@ -44,6 +44,8 @@
   height: calc(100% - 60px);
   overflow: auto;
   padding: 10px;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 .aistate-page-overlay {
@@ -55,4 +57,30 @@
   background-color: rgba(0, 0, 0, 0.5);
   z-index: 9;
   display: none;
+}
+
+.cli-output {
+  margin-bottom: 10px;
+  font-family: monospace;
+}
+
+.cli-output .timestamp {
+  color: #666;
+  font-size: 0.9em;
+  margin-right: 10px;
+}
+
+.cli-output.stderr {
+  color: #ff6b6b;
+}
+
+.cli-output.error {
+  color: #ff0000;
+  font-weight: bold;
+}
+
+.cli-output pre {
+  margin: 5px 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }

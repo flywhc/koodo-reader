@@ -5,4 +5,11 @@ export interface AIStateDialogProps {
 export interface AIStateDialogState {
   isAIState: boolean;
   message: string;
+  cliOutputs: CLIOutput[];
+}
+
+export interface CLIOutput {
+  type: 'stdout' | 'stderr' | 'error';
+  content: string;
+  timestamp: string;
 }

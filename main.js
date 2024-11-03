@@ -620,22 +620,64 @@ const createMainWin = () => {
     filePath = null;
   });
 };
-app.on("ready", () => {
 
-  // 检查并设置 CHATCHAT_ROOT 环境变量
-  //if (!process.env.CHATCHAT_ROOT) {
-  process.env.CHATCHAT_ROOT =  path.join(dirPath, "chatchat_data");
-  console.log("CHATCHAT_ROOT: ", process.env.CHATCHAT_ROOT);
-  //}
-  
-  // 运行命令行 "cli start -a"
-  exec('C:/AIGC/Langchain-Chatchat/libs/chatchat-server/chatchat/dist/cli start -a', (error, stdout, stderr) => {
-    if (error) {
-      console.error(`执行命令时出错: ${error}`);
-      return;
-    }
-    console.log(`命令输出: ${stdout}`);
+const executeCommand = (command) => {
+  return new Promise((resolve, reject) => {
+    exec(command, (error, stdout, stderr) => {
+      const timestamp = new Date().toISOString();
+      
+      if (stdout) {
+        cliOutputs.push({
+          type: 'stdout',
+          content: stdout,
+          timestamp
+        });
+      }
+      
+      if (stderr) {
+        cliOutputs.push({ 
+          type: 'stderr',
+          content: stderr,
+          timestamp
+        });
+      }
+      
+      if (error) {
+        cliOutputs.push({
+          type: 'error',
+          content: error.message,
+          timestamp
+        });
+        console.error(`执行命令时出错: ${error}`);
+        reject(error);
+        return;
+      }
+
+      if(mainWin) {
+        mainWin.webContents.send('cli-output-updated');
+      }
+      
+      resolve({ stdout, stderr });
+    });
   });
+}
+
+app.on("ready", async () => {
+  process.env.CHATCHAT_ROOT = path.join(dirPath, "chatchat_data");
+  console.log("CHATCHAT_ROOT: ", process.env.CHATCHAT_ROOT);
+
+  try {
+  // 如果data\knowledge_base\info.db不存在，则初始化
+  if (!fs.existsSync(path.join(process.env.CHATCHAT_ROOT, "knowledge_base", "info.db"))) {
+    await executeCommand('C:/AIGC/Langchain-Chatchat/libs/chatchat-server/chatchat/dist/cli init -r');
+    console.log('初始化命令执行成功');
+  }
+    
+    // init 成功后执行 start 命令
+    await executeCommand('C:/AIGC/Langchain-Chatchat/libs/chatchat-server/chatchat/dist/cli start -a');
+  } catch (error) {
+    console.error('命令执行失败:', error);
+  }
 
   createMainWin();
 });
@@ -644,4 +686,12 @@ app.on("window-all-closed", () => {
 });
 app.on("open-file", (e, pathToFile) => {
   filePath = pathToFile;
+});
+
+// 在文件顶部添加
+let cliOutputs = [];
+
+// 添加IPC处理器
+ipcMain.handle('get-cli-outputs', () => {
+  return cliOutputs;
 });
